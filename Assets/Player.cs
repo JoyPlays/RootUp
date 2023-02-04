@@ -36,7 +36,7 @@ public class Player : MonoBehaviour
 
         MoveAndRotate();
 
-        transform.Translate(new Vector3(0f, yVelocity, 0f) * Time.deltaTime);
+        //transform.Translate(new Vector3(0f, yVelocity, 0f) * Time.deltaTime);
     }
 
     private void HandleInput()
