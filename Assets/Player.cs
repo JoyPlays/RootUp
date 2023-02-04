@@ -38,8 +38,19 @@ public class Player : MonoBehaviour
             distanceTravelledAlongPath -= distanceToTravel;
         }
 
-        Vector3 pos = path.EvaluatePosition(distanceTravelledAlongPath);
+        Vector3 pos = GetPathPosition();
         transform.position = pos + offsetFromPath;
+        transform.LookAt(pos + GetPathRotation());
+    }
+
+    private Vector3 GetPathPosition()
+    {
+        return path.EvaluatePosition(distanceTravelledAlongPath);
+    }
+
+    private Vector3 GetPathRotation()
+    {
+        return path.EvaluateTangent(distanceTravelledAlongPath);
     }
 
     private SplinePath CreateSplinePath(SplineContainer splineContainer, Matrix4x4 containersWorldMatrix)
