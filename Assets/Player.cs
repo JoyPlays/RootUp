@@ -11,9 +11,7 @@ public class Player : MonoBehaviour
 
     private SplinePath path;
     private float distanceTravelledAlongPath;
-
-    private const int FORWARD_MOVEMENT = 1;
-    private const int BACKWARD_MOVEMENT = -1;
+    private MovementDirection travelDirection;
 
     // Start is called before the first frame update
     private void Start()
@@ -26,21 +24,41 @@ public class Player : MonoBehaviour
     // Update is called once per frame
     private void Update()
     {
-        float distanceToTravel = speed * Time.deltaTime;
+        HandleInput();
+
+        MoveAndRotate();
+    }
+
+    private void HandleInput()
+    {
+        travelDirection = MovementDirection.NOT_MOVING;
 
         if (Input.GetKey(KeyCode.D))
         {
-            distanceTravelledAlongPath += distanceToTravel;
+            travelDirection = MovementDirection.FORWARD;
         }
 
         if (Input.GetKey(KeyCode.A))
         {
-            distanceTravelledAlongPath -= distanceToTravel;
+            travelDirection = MovementDirection.BACKWARD;
         }
+    }
 
-        Vector3 pos = GetPathPosition();
-        transform.position = pos + offsetFromPath;
-        transform.LookAt(pos + GetPathRotation());
+    private void MoveAndRotate()
+    {
+        if (travelDirection == MovementDirection.NOT_MOVING)
+            return;
+
+        float distanceToTravel = speed * Time.deltaTime;
+
+        distanceToTravel *= (int)travelDirection;
+        distanceTravelledAlongPath += distanceToTravel;
+
+        Vector3 newPosition = GetPathPosition() + offsetFromPath;
+        Vector3 newRotation = newPosition + (GetPathRotation() * (int)travelDirection);
+
+        transform.position = newPosition;
+        transform.LookAt(newRotation);
     }
 
     private Vector3 GetPathPosition()
@@ -59,7 +77,7 @@ public class Player : MonoBehaviour
 
         foreach (Spline spline in splineContainer.Splines)
         {
-            SplineSlice<Spline> slice = CreateSplineSlice(spline, 0, FORWARD_MOVEMENT, containersWorldMatrix);
+            SplineSlice<Spline> slice = CreateSplineSlice(spline, 0, (int)MovementDirection.FORWARD, containersWorldMatrix);
             splineSlices.Add(slice);
         }
 
@@ -70,4 +88,11 @@ public class Player : MonoBehaviour
     {
         return new SplineSlice<Spline>(spline, new SplineRange(startKnot, spline.Count * direction), containersWorldMatrix);
     }
+}
+
+public enum MovementDirection
+{
+    FORWARD = 1,
+    BACKWARD = -1,
+    NOT_MOVING = 0
 }
