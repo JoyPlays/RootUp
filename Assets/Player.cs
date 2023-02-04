@@ -5,13 +5,18 @@ using UnityEngine.Splines;
 
 public class Player : MonoBehaviour
 {
+    [SerializeField] private Animator charAnimator;
+
     [SerializeField] private SplineContainer splineContainer;
     [SerializeField] private Vector3 offsetFromPath;
+
     [SerializeField] private float speed = 0.01f;
-    [SerializeField] private Animator charAnimator;
+    [SerializeField] private float jumpHeight = 10f;
+    [SerializeField] private float gravityScale = 5f;
 
     private SplinePath path;
     private float distanceTravelledAlongPath;
+    private float yVelocity;
     private MovementDirection travelDirection;
 
     // Start is called before the first frame update
@@ -25,26 +30,39 @@ public class Player : MonoBehaviour
     // Update is called once per frame
     private void Update()
     {
+        yVelocity += Physics.gravity.y * gravityScale * Time.deltaTime;
+
         HandleInput();
 
         MoveAndRotate();
+
+        transform.Translate(new Vector3(0f, yVelocity, 0f) * Time.deltaTime);
     }
 
     private void HandleInput()
     {
         travelDirection = MovementDirection.NOT_MOVING;
         charAnimator.SetFloat("Speed", Mathf.Abs(Input.GetAxis("Horizontal")));
+
+        if (Input.GetKeyDown(KeyCode.Space))
+        {
+            Jump();
+        }
+
         if (Input.GetKey(KeyCode.D))
         {
             travelDirection = MovementDirection.FORWARD;
-            
-
         }
 
         if (Input.GetKey(KeyCode.A))
         {
             travelDirection = MovementDirection.BACKWARD;
         }
+    }
+
+    private void Jump()
+    {
+        yVelocity = Mathf.Sqrt(jumpHeight * -2 * (Physics.gravity.y * gravityScale));
     }
 
     private void MoveAndRotate()
