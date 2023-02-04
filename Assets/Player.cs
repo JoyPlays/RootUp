@@ -7,7 +7,8 @@ public class Player : MonoBehaviour
 {
     [SerializeField] private SplineContainer splineContainer;
     [SerializeField] private Vector3 offsetFromPath;
-    [SerializeField] private float speed = 0.05f;
+    [SerializeField] private float speed = 0.01f;
+    [SerializeField] private Animator charAnimator;
 
     private SplinePath path;
     private float distanceTravelledAlongPath;
@@ -32,10 +33,12 @@ public class Player : MonoBehaviour
     private void HandleInput()
     {
         travelDirection = MovementDirection.NOT_MOVING;
-
+        charAnimator.SetFloat("Speed", Mathf.Abs(Input.GetAxis("Horizontal")));
         if (Input.GetKey(KeyCode.D))
         {
             travelDirection = MovementDirection.FORWARD;
+            
+
         }
 
         if (Input.GetKey(KeyCode.A))
@@ -49,7 +52,7 @@ public class Player : MonoBehaviour
         if (travelDirection == MovementDirection.NOT_MOVING)
             return;
 
-        float distanceToTravel = speed * Time.deltaTime;
+        float distanceToTravel = speed * Time.fixedDeltaTime;
 
         distanceToTravel *= (int)travelDirection;
         distanceTravelledAlongPath += distanceToTravel;
