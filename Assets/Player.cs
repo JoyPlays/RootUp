@@ -9,7 +9,6 @@ public class Player : MonoBehaviour
     [SerializeField] private Animator charAnimator;
 
     [SerializeField] private SplineContainer splineContainer;
-    [SerializeField] private Vector3 offsetFromPath;
 
     [SerializeField] private float speed = 0.01f;
     [SerializeField] private float jumpHeight = 10f;
@@ -20,9 +19,10 @@ public class Player : MonoBehaviour
     private SplinePath path;
     private float distanceTravelledAlongPath;
     private float yVelocity;
-    private MovementDirection travelDirection;
+    private float _movementDirection;
+    private float _distanceToTravel;
 
-    private bool isGrounded = true;
+    private bool _isGrounded = true;
 
     // Start is called before the first frame update
     private void Start()
@@ -35,52 +35,53 @@ public class Player : MonoBehaviour
     // Update is called once per frame
     private void Update()
     {
-        yVelocity += Physics.gravity.y * gravityScale * Time.deltaTime;
+        if (!_isGrounded)
+        {
+            yVelocity += Physics.gravity.y * gravityScale * Time.deltaTime;
+            transform.Translate(new Vector3(0f, yVelocity, 0f) * Time.deltaTime);
+
+            CheckForCollisionWithGround();
+        }
 
         HandleInput();
 
-        if (isGrounded)
-        {
-            MoveAndRotate();
-        }
-        else
-        {
-            NativeSpline native = new NativeSpline(path, containersWorldMatrix);
-            float distance = SplineUtility.GetNearestPoint(native, transform.position, out float3 position, out float t);
-            Debug.Log(distance);
-            if (distance < 0.5f)
-            {
-                distanceTravelledAlongPath = t;
-                transform.position = GetPathPosition();
-                isGrounded = true;
-                return;
-            }
+        if (_movementDirection == 0f)
+            return;
 
-            transform.Translate(new Vector3(0f, yVelocity, 0f) * Time.deltaTime);
+        CalculateDistanceTravelled();
+
+        Move();
+        Rotate();
+    }
+
+    private void CheckForCollisionWithGround()
+    {
+        if (yVelocity > 0)
+            return;
+
+        //Debug.DrawRay(transform.position, Vector3.down, Color.black, 10f);
+        //Debug.DrawLine(transform.position, transform.position - Vector3.down * 0.5f, Color.red, 10f);
+        RaycastHit hit;
+        if (Physics.Raycast(transform.position, Vector3.down, out hit, 0.5f))
+        {
+            //Debug.Log(hit.point);
+            //Debug.DrawLine(transform.position, hit.point, Color.blue, 10f);
+            //Debug.Log(transform.position.y);
+            transform.position = new Vector3(transform.position.x, hit.point.y, transform.position.z);
+            //Debug.Log(transform.position.y);
+            _isGrounded = true;
         }
     }
 
     private void HandleInput()
     {
-        if (!isGrounded)
-            return;
+        _movementDirection = Input.GetAxis("Horizontal");
 
-        travelDirection = MovementDirection.NOT_MOVING;
-        charAnimator.SetFloat("Speed", Mathf.Abs(Input.GetAxis("Horizontal")));
+        charAnimator.SetFloat("Speed", Mathf.Abs(_movementDirection));
 
-        if (Input.GetKeyDown(KeyCode.Space))
+        if (Input.GetKeyDown(KeyCode.Space) && _isGrounded)
         {
             Jump();
-        }
-
-        if (Input.GetKey(KeyCode.D))
-        {
-            travelDirection = MovementDirection.FORWARD;
-        }
-
-        if (Input.GetKey(KeyCode.A))
-        {
-            travelDirection = MovementDirection.BACKWARD;
         }
     }
 
@@ -88,25 +89,39 @@ public class Player : MonoBehaviour
     {
         yVelocity = Mathf.Sqrt(jumpHeight * -2 * (Physics.gravity.y * gravityScale));
         transform.Translate(new Vector3(0f, yVelocity, 0f) * Time.deltaTime);
-        isGrounded = false;
+        _isGrounded = false;
     }
 
-    private void MoveAndRotate()
+    private void CalculateDistanceTravelled()
     {
-        if (travelDirection == MovementDirection.NOT_MOVING)
-            return;
-
-        float distanceToTravel = speed * Time.fixedDeltaTime;
-
-        distanceToTravel *= (int)travelDirection;
-        distanceTravelledAlongPath += distanceToTravel;
+        _distanceToTravel = _movementDirection * speed * Time.deltaTime;
+        distanceTravelledAlongPath += _distanceToTravel;
         distanceTravelledAlongPath = Mathf.Clamp01(distanceTravelledAlongPath);
+    }
 
-        Vector3 newPosition = GetPathPosition() + offsetFromPath;
-        Vector3 newRotation = newPosition + (GetPathRotation() * (int)travelDirection);
+    private void Move()
+    {
+        Vector3 newPosition = GetPathPosition();
+
+        if (!_isGrounded)
+        {
+            newPosition = new Vector3(newPosition.x, transform.position.y, newPosition.z);
+        }
 
         transform.position = newPosition;
-        transform.LookAt(newRotation);
+
+    }
+
+    private void Rotate()
+    {
+        Vector3 newRotation = GetPathRotation() * _movementDirection;
+
+        if (!_isGrounded)
+        {
+            newRotation = new Vector3(newRotation.x, 0f, newRotation.z);
+        }
+
+        transform.LookAt(transform.position + newRotation);
     }
 
     private Vector3 GetPathPosition()
@@ -125,7 +140,7 @@ public class Player : MonoBehaviour
 
         foreach (Spline spline in splineContainer.Splines)
         {
-            SplineSlice<Spline> slice = CreateSplineSlice(spline, 0, (int)MovementDirection.FORWARD, containersWorldMatrix);
+            SplineSlice<Spline> slice = CreateSplineSlice(spline, 0, 1, containersWorldMatrix);
             splineSlices.Add(slice);
         }
 
@@ -136,11 +151,4 @@ public class Player : MonoBehaviour
     {
         return new SplineSlice<Spline>(spline, new SplineRange(startKnot, spline.Count * direction), containersWorldMatrix);
     }
-}
-
-public enum MovementDirection
-{
-    FORWARD = 1,
-    BACKWARD = -1,
-    NOT_MOVING = 0
 }
