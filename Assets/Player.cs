@@ -23,6 +23,7 @@ public class Player : MonoBehaviour
     private float _distanceToTravel;
 
     private bool _isGrounded = true;
+    private bool _hasDoubleJumped = false;
 
     private void Start()
     {
@@ -68,6 +69,7 @@ public class Player : MonoBehaviour
             transform.position = new Vector3(transform.position.x, hit.point.y, transform.position.z);
             //Debug.Log(transform.position.y);
             _isGrounded = true;
+            _hasDoubleJumped = false;
         }
     }
 
@@ -77,7 +79,7 @@ public class Player : MonoBehaviour
 
         charAnimator.SetFloat("Speed", Mathf.Abs(_movementDirection));
 
-        if (Input.GetKeyDown(KeyCode.Space) && _isGrounded)
+        if (Input.GetKeyDown(KeyCode.Space) && (_isGrounded || !_isGrounded && !_hasDoubleJumped ))
         {
             Jump();
         }
@@ -85,6 +87,9 @@ public class Player : MonoBehaviour
 
     private void Jump()
     {
+        if (!_isGrounded)
+            _hasDoubleJumped = true;
+
         _yVelocity = Mathf.Sqrt(jumpHeight * -2 * (Physics.gravity.y * gravityScale));
         transform.Translate(new Vector3(0f, _yVelocity, 0f) * Time.deltaTime);
         _isGrounded = false;
