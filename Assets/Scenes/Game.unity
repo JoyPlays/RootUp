@@ -2975,6 +2975,10 @@ PrefabInstance:
       value: Player
       objectReference: {fileID: 0}
     - target: {fileID: 1164091162583655150, guid: 38028ce4aaa5049d5a600400d89a9f99, type: 3}
+      propertyPath: speed
+      value: 0.01
+      objectReference: {fileID: 0}
+    - target: {fileID: 1164091162583655150, guid: 38028ce4aaa5049d5a600400d89a9f99, type: 3}
       propertyPath: splineContainer
       value: 
       objectReference: {fileID: 122544631}

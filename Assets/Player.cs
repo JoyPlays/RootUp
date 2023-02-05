@@ -14,31 +14,29 @@ public class Player : MonoBehaviour
     [SerializeField] private float jumpHeight = 10f;
     [SerializeField] private float gravityScale = 5f;
 
-    private Matrix4x4 containersWorldMatrix;
+    private Matrix4x4 _containersWorldMatrix;
 
-    private SplinePath path;
-    private float distanceTravelledAlongPath;
-    private float yVelocity;
+    private SplinePath _path;
+    private float _distanceTravelledAlongPath;
+    private float _yVelocity;
     private float _movementDirection;
     private float _distanceToTravel;
 
     private bool _isGrounded = true;
 
-    // Start is called before the first frame update
     private void Start()
     {
-        containersWorldMatrix = splineContainer.transform.localToWorldMatrix;
+        _containersWorldMatrix = splineContainer.transform.localToWorldMatrix;
 
-        path = CreateSplinePath(splineContainer, containersWorldMatrix);
+        _path = CreateSplinePath(splineContainer, _containersWorldMatrix);
     }
 
-    // Update is called once per frame
     private void Update()
     {
         if (!_isGrounded)
         {
-            yVelocity += Physics.gravity.y * gravityScale * Time.deltaTime;
-            transform.Translate(new Vector3(0f, yVelocity, 0f) * Time.deltaTime);
+            _yVelocity += Physics.gravity.y * gravityScale * Time.deltaTime;
+            transform.Translate(new Vector3(0f, _yVelocity, 0f) * Time.deltaTime);
 
             CheckForCollisionWithGround();
         }
@@ -56,7 +54,7 @@ public class Player : MonoBehaviour
 
     private void CheckForCollisionWithGround()
     {
-        if (yVelocity > 0)
+        if (_yVelocity > 0)
             return;
 
         //Debug.DrawRay(transform.position, Vector3.down, Color.black, 10f);
@@ -87,16 +85,16 @@ public class Player : MonoBehaviour
 
     private void Jump()
     {
-        yVelocity = Mathf.Sqrt(jumpHeight * -2 * (Physics.gravity.y * gravityScale));
-        transform.Translate(new Vector3(0f, yVelocity, 0f) * Time.deltaTime);
+        _yVelocity = Mathf.Sqrt(jumpHeight * -2 * (Physics.gravity.y * gravityScale));
+        transform.Translate(new Vector3(0f, _yVelocity, 0f) * Time.deltaTime);
         _isGrounded = false;
     }
 
     private void CalculateDistanceTravelled()
     {
         _distanceToTravel = _movementDirection * speed * Time.deltaTime;
-        distanceTravelledAlongPath += _distanceToTravel;
-        distanceTravelledAlongPath = Mathf.Clamp01(distanceTravelledAlongPath);
+        _distanceTravelledAlongPath += _distanceToTravel;
+        _distanceTravelledAlongPath = Mathf.Clamp01(_distanceTravelledAlongPath);
     }
 
     private void Move()
@@ -126,12 +124,12 @@ public class Player : MonoBehaviour
 
     private Vector3 GetPathPosition()
     {
-        return path.EvaluatePosition(distanceTravelledAlongPath);
+        return _path.EvaluatePosition(_distanceTravelledAlongPath);
     }
 
     private Vector3 GetPathRotation()
     {
-        return path.EvaluateTangent(distanceTravelledAlongPath);
+        return _path.EvaluateTangent(_distanceTravelledAlongPath);
     }
 
     private SplinePath CreateSplinePath(SplineContainer splineContainer, Matrix4x4 containersWorldMatrix)
