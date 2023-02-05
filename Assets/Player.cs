@@ -81,6 +81,8 @@ public class Player : MonoBehaviour
 
         if (Input.GetKeyDown(KeyCode.Space) && (_isGrounded || !_isGrounded && !_hasDoubleJumped ))
         {
+            
+            charAnimator.SetTrigger("Jump");
             Jump();
         }
     }
@@ -89,7 +91,7 @@ public class Player : MonoBehaviour
     {
         if (!_isGrounded)
             _hasDoubleJumped = true;
-
+        
         _yVelocity = Mathf.Sqrt(jumpHeight * -2 * (Physics.gravity.y * gravityScale));
         transform.Translate(new Vector3(0f, _yVelocity, 0f) * Time.deltaTime);
         _isGrounded = false;
